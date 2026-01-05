@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Notes App</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav>
+    <h1>My Notes App</h1>
+    <div>
+      <input type="text" id="searchInput" placeholder="Search notes...">
+      <button id="themeToggle">🌙</button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Welcome to My Notes App</h1>
+      <p>Upload, search, view, and download your notes easily!</p>
+      <a href="#upload" class="btn-gradient">Get Started</a>
+    </div>
+  </section>
+  
+
+  <!-- Upload Form -->
+  <section id="upload" class="upload-section">
+    <h2>Upload a Note</h2>
+    <form id="uploadForm">
+      <input type="text" id="title" placeholder="Title" required>
+      <textarea id="description" placeholder="Description" required></textarea>
+      <input type="file" id="file" required>
+      <button type="submit" class="btn-gradient">Upload Note</button>
+    </form>
+    <div id="uploadMessage"></div>
+  </section>
+
+  <!-- Notes Display Section -->
+  <section class="notes-section">
+    <h2>All Notes</h2>
+    <div id="notesContainer" class="notes-container">
+      <!-- Notes cards will appear here -->
+    </div>
+  </section>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
