@@ -1,4 +1,10 @@
 // ===============================
+// PDF.js WORKER (MUST BE FIRST)
+// ===============================
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+// ===============================
 // API CONFIG
 // ===============================
 const apiUrl = "http://127.0.0.1:8000/api/notes/";
@@ -18,7 +24,8 @@ const themeToggle = document.getElementById("themeToggle");
 // ===============================
 themeToggle.addEventListener("click", () => {
   document.body.classList.toggle("dark-mode");
-  themeToggle.textContent = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
+  themeToggle.textContent =
+    document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
 });
 
 // ===============================
@@ -33,19 +40,17 @@ async function getNotes() {
       url += `?search=${encodeURIComponent(searchText)}`;
     }
 
-    const res = await fetch(url, { method: "GET" });
+    const res = await fetch(url);
     const notes = await res.json();
-
     displayNotes(notes);
 
   } catch (error) {
-    console.error("Error fetching notes:", error);
     notesContainer.innerHTML = "<p>Error fetching notes</p>";
   }
 }
 
 // ===============================
-// DISPLAY NOTES AS CARDS
+// DISPLAY NOTES
 // ===============================
 function displayNotes(notes) {
   notesContainer.innerHTML = "";
@@ -56,48 +61,109 @@ function displayNotes(notes) {
   }
 
   notes.forEach(note => {
-    const fileUrl = note.file.startsWith("http") ? note.file : BASE_URL + note.file;
+    const viewUrl = note.file.startsWith("http")
+      ? note.file
+      : BASE_URL + note.file;
+
+    const downloadUrl = `${apiUrl}${note.id}/download/`;
+    const ext = viewUrl.split(".").pop().toLowerCase();
 
     const card = document.createElement("div");
     card.className = "note-card";
 
     card.innerHTML = `
+      <div class="pdf-preview" id="preview-${note.id}">
+        Loading preview...
+      </div>
+
       <h3>${note.title}</h3>
       <p>${note.description}</p>
+
       <div class="card-actions">
         <button class="view-btn">View</button>
-        <button class="download-btn">Download</button>
+        <a href="${downloadUrl}" class="download-btn">Download</a>
+        <button class="delete-btn">Delete</button>
       </div>
     `;
 
-    // 🔹 View button → open PDF in new tab
+    // ===== PDF FIRST PAGE PREVIEW =====
+    if (ext === "pdf") {
+      renderPdfPreview(viewUrl, `preview-${note.id}`);
+    } else {
+      const box = document.getElementById(`preview-${note.id}`);
+      if (box) box.innerText = "No preview";
+    }
+
+    // ===== VIEW BUTTON =====
     card.querySelector(".view-btn").addEventListener("click", () => {
-      window.open(fileUrl, "_blank");
+      if (ext === "pdf") {
+        window.open(viewUrl, "_blank");
+      } else if (["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext)) {
+        const googleViewer =
+          "https://docs.google.com/gview?url=" +
+          encodeURIComponent(viewUrl) +
+          "&embedded=true";
+        window.open(googleViewer, "_blank");
+      } else {
+        alert("Preview not supported. Please download.");
+      }
     });
 
-    // 🔹 Download button → fetch file and download
-    card.querySelector(".download-btn").addEventListener("click", async () => {
-      try {
-        const response = await fetch(fileUrl);
-        if (!response.ok) throw new Error("Network response was not ok");
-        const blob = await response.blob();
+    // ===== DELETE BUTTON =====
+    card.querySelector(".delete-btn").addEventListener("click", async () => {
+      const confirmDelete = confirm("Are you sure you want to delete this note?");
+      if (!confirmDelete) return;
 
-        const link = document.createElement("a");
-        const url = window.URL.createObjectURL(blob);
-        link.href = url;
-        link.download = note.title + ".pdf";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+      try {
+        const res = await fetch(`${apiUrl}${note.id}/`, {
+          method: "DELETE"
+        });
+
+        if (res.ok) {
+          alert("✅ Note deleted");
+          getNotes(); // refresh list
+        } else {
+          alert("❌ Failed to delete note");
+        }
       } catch (error) {
-        console.error("Download failed:", error);
-        alert("Failed to download file.");
+        alert("❌ Error deleting note");
       }
     });
 
     notesContainer.appendChild(card);
   });
+}
+
+// ===============================
+// PDF PREVIEW FUNCTION
+// ===============================
+async function renderPdfPreview(pdfUrl, containerId) {
+  try {
+    const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+    const page = await pdf.getPage(1);
+
+    const scale = 0.4;
+    const viewport = page.getViewport({ scale });
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({
+      canvasContext: ctx,
+      viewport
+    }).promise;
+
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    container.appendChild(canvas);
+
+  } catch (error) {
+    const container = document.getElementById(containerId);
+    if (container) container.innerText = "No preview";
+  }
 }
 
 // ===============================
@@ -113,20 +179,21 @@ uploadForm.addEventListener("submit", async (e) => {
 
   try {
     const res = await fetch(apiUrl, { method: "POST", body: formData });
+
     if (res.ok) {
       uploadMessage.innerText = "✅ Note uploaded!";
       uploadForm.reset();
-      getNotes(); // refresh all notes
+      getNotes();
     } else {
-      uploadMessage.innerText = "❌ Failed to upload note";
+      uploadMessage.innerText = "❌ Upload failed";
     }
-  } catch (error) {
-    uploadMessage.innerText = "❌ Error uploading note";
+  } catch {
+    uploadMessage.innerText = "❌ Upload error";
   }
 });
 
 // ===============================
-// LIVE SEARCH (DEBOUNCED)
+// LIVE SEARCH (DEBOUNCE)
 // ===============================
 let searchTimeout;
 searchInput.addEventListener("input", () => {

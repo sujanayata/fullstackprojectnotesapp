@@ -2,23 +2,23 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+
 from .models import Note
 from .serializers import NoteSerializer
 
-class NoteListCreate(APIView):
-    """
-    GET  : List all notes (search by title or description)
-    POST : Upload a new note
-    """
 
+class NoteListCreate(APIView):
     def get(self, request):
-        search_query = request.GET.get("search", "")  # get from query param
+        search_query = request.GET.get("search", "")
         notes = Note.objects.filter(
             Q(title__icontains=search_query) |
             Q(description__icontains=search_query)
         ).order_by("-uploaded_at")
+
         serializer = NoteSerializer(notes, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
     def post(self, request):
         serializer = NoteSerializer(data=request.data)
@@ -29,27 +29,23 @@ class NoteListCreate(APIView):
 
 
 class NoteDetail(APIView):
-    """
-    GET    : Get a single note by ID
-    DELETE : Delete a note by ID
-    """
-
-    def get_object(self, pk):
-        try:
-            return Note.objects.get(pk=pk)
-        except Note.DoesNotExist:
-            return None
-
     def get(self, request, pk):
-        note = self.get_object(pk)
-        if note is None:
-            return Response({"error": "Note not found"}, status=status.HTTP_404_NOT_FOUND)
+        note = get_object_or_404(Note, pk=pk)
         serializer = NoteSerializer(note)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
     def delete(self, request, pk):
-        note = self.get_object(pk)
-        if note is None:
-            return Response({"error": "Note not found"}, status=status.HTTP_404_NOT_FOUND)
+        note = get_object_or_404(Note, pk=pk)
         note.delete()
-        return Response({"message": "Note deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ✅ FORCE DOWNLOAD (THIS IS THE KEY)
+def download_note(request, pk):
+    note = get_object_or_404(Note, pk=pk)
+    response = FileResponse(
+        note.file.open(),
+        as_attachment=True,
+        filename=note.file.name.split("/")[-1]
+    )
+    return response
