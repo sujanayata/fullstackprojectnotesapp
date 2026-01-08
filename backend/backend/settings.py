@@ -51,8 +51,15 @@ INSTALLED_APPS = [
 
     # Local apps
     'notes',
+    "cloudinary", "cloudinary_storage"
 ]
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
+CLOUDINARY_STORAGE = {
+  "CLOUD_NAME": "...",
+  "API_KEY": "...",
+  "API_SECRET": "..."
+}
 # --------------------------------------------------
 # MIDDLEWARE
 # --------------------------------------------------
@@ -69,6 +76,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
 X_FRAME_OPTIONS = 'ALLOWALL'
 
 # --------------------------------------------------
