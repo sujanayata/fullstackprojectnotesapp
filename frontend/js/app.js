@@ -7,8 +7,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 // ===============================
 // API CONFIG
 // ===============================
-const apiUrl = "http://127.0.0.1:8000/api/notes/";
-const BASE_URL = "http://127.0.0.1:8000";
+const apiUrl = "https://fullstackprojectnotesapp-1.onrender.com/api/notes/";
+const BASE_URL = "https://fullstackprojectnotesapp-1.onrender.com";
 
 // ===============================
 // DOM ELEMENTS
