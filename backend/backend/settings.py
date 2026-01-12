@@ -10,9 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+
+
+
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+load_dotenv()
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -51,15 +55,12 @@ INSTALLED_APPS = [
 
     # Local apps
     'notes',
-    "cloudinary", "cloudinary_storage"
+   
 ]
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
-CLOUDINARY_STORAGE = {
-  "CLOUD_NAME": "dorjurqla",
-  "API_KEY": "165123216534937",
-  "API_SECRET": "**********"
-}
+
 # --------------------------------------------------
 # MIDDLEWARE
 # --------------------------------------------------
@@ -74,6 +75,22 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization",
+    "x-csrftoken",
+    "accept",
+    "origin",
+    "user-agent",
+]
+
+# IMPORTANT FOR PDF.js
+CORS_EXPOSE_HEADERS = ["Content-Type"]
+
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
@@ -102,7 +119,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'
+#
 
 # --------------------------------------------------
 # DATABASE (MySQL - Aiven)
@@ -110,16 +127,13 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv("DB_NAME"),
         'USER': os.getenv("DB_USER"),
         'PASSWORD': os.getenv("DB_PASSWORD"),
         'HOST': os.getenv("DB_HOST"),
-        'PORT': os.getenv("DB_PORT"),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': 'SET sql_mode=STRICT_TRANS_TABLES',
-        },
+        'PORT': os.getenv("DB_PORT","5432"),
+       
     }
 }
 
