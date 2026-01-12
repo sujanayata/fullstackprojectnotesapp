@@ -102,6 +102,11 @@ CSRF_TRUSTED_ORIGINS = [
     "https://fullstackprojectnotesapp-4.onrender.com"
 ]
 
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = "None"
+
 # --------------------------------------------------
 # URLS & TEMPLATES
 # --------------------------------------------------
