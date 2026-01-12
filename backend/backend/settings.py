@@ -97,6 +97,11 @@ CORS_ALLOW_CREDENTIALS = True
 
 X_FRAME_OPTIONS = 'ALLOWALL'
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://yatasujana.github.io",
+    "https://fullstackprojectnotesapp-4.onrender.com"
+]
+
 # --------------------------------------------------
 # URLS & TEMPLATES
 # --------------------------------------------------
