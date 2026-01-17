@@ -24,12 +24,8 @@ if not SECRET_KEY:
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = [
-    "fullstackprojectnotesapp-5.onrender.com",
-    "yatasujana.github.io",
-    "127.0.0.1",
-    "localhost",
-]
+ALLOWED_HOSTS = ["*"]
+    
 
 
 # --------------------------------------------------
